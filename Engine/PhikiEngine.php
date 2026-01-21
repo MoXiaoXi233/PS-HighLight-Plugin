@@ -25,6 +25,11 @@ class HighlightPHP_Engine_PhikiEngine implements HighlightPHP_Engine_EngineInter
     public function init()
     {
         if ($this->phiki === null) {
+            // 从工厂配置读取主题
+            require_once __DIR__ . '/EngineFactory.php';
+            $config = HighlightPHP_Engine_EngineFactory::getConfig();
+            $this->theme = $config['phiki_theme'] ?? 'github-light';
+
             // PSR-4 autoloading for Phiki
             spl_autoload_register(function ($class) {
                 $prefix = 'Phiki\\';

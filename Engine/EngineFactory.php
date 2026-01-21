@@ -26,6 +26,15 @@ class HighlightPHP_Engine_EngineFactory
     }
 
     /**
+     * 获取当前配置
+     * @return array
+     */
+    public static function getConfig()
+    {
+        return self::$config;
+    }
+
+    /**
      * 获取当前引擎
      * @return HighlightPHP_Engine_EngineInterface
      */

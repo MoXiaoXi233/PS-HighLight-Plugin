@@ -47,7 +47,31 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
      */
     public static function config($form)
     {
-        // 当前不需要配置，保持接口兼容
+        $form->addInput(new Typecho_Widget_Helper_Form_Element_Select(
+            'engine',
+            [
+                'highlight.php' => _t('highlight.php (兼容 highlight.js CSS)'),
+                'phiki' => _t('Phiki (TextMate 语法，更高精度)')
+            ],
+            'highlight.php',
+            _t('高亮引擎'),
+            _t('highlight.php: 速度快，兼容 highlight.js 主题<br>Phiki: 精度更高，支持嵌套语法，内联样式')
+        ));
+
+        $form->addInput(new Typecho_Widget_Helper_Form_Element_Select(
+            'phikiTheme',
+            [
+                'github-light' => _t('GitHub Light'),
+                'github-dark' => _t('GitHub Dark'),
+                'monokai' => _t('Monokai'),
+                'nord' => _t('Nord'),
+                'dracula' => _t('Dracula'),
+                'one-dark-pro' => _t('One Dark Pro')
+            ],
+            'github-light',
+            _t('Phiki 主题'),
+            _t('仅在使用 Phiki 引擎时生效')
+        ));
     }
 
     /**
@@ -95,6 +119,16 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
         require_once __DIR__ . '/Engine/HighlightPhpEngine.php';
         require_once __DIR__ . '/Engine/PhikiEngine.php';
 
+        // 读取插件配置
+        $options = Helper::options();
+        $pluginConfig = $options->plugin('HighlightPHP');
+
+        $config = [
+            'engine' => $pluginConfig->engine ?? 'highlight.php',
+            'phiki_theme' => $pluginConfig->phikiTheme ?? 'github-light',
+        ];
+
+        HighlightPHP_Engine_EngineFactory::setConfig($config);
         return HighlightPHP_Engine_EngineFactory::getEngine();
     }
 
