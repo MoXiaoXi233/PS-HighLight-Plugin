@@ -4,22 +4,17 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /**
  * HighlightPHP - Typecho 服务器端代码高亮插件
  *
- * 使用 highlight.php 在服务器端对文章中的代码块进行语法高亮
- * 行为与前端 highlight.js 一致，输出 hljs 兼容的 class 结构
+ * 支持两种高亮引擎：
+ * - highlight.php: 兼容 highlight.js，使用 CSS 类名
+ * - Phiki: 基于 TextMate 语法，使用内联样式
  *
  * @package HighlightPHP
  * @author pure
- * @version 1.0.0
+ * @version 2.0.0
  * @link https://github.com
  */
 class HighlightPHP_Plugin implements Typecho_Plugin_Interface
 {
-    /**
-     * Highlight.php 实例缓存
-     * @var \Highlight\Highlighter|null
-     */
-    private static $highlighter = null;
-
     /**
      * 激活插件方法
      */
@@ -31,6 +26,7 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
         Typecho_Plugin::factory('Widget_Abstract_Comments')->contentEx = __CLASS__ . '::highlight';
 
         $message = _t('插件已激活，代码高亮功能已启用。');
+        $message .= '<br><br><strong>当前引擎：</strong>' . self::getEngineName();
         $message .= '<br><br><strong>重要提示：</strong>评论高亮需要在后台设置允许 <code>class</code> 属性：';
         $message .= '<br>进入 <a href="' . Helper::options()->adminUrl . 'options-discussion.php">设置 → 评论</a>，';
         $message .= '将"评论允许的 HTML 标签"修改为：<code>&lt;pre class=""&gt;&lt;code class=""&gt;&lt;span class=""&gt;</code>';
@@ -43,7 +39,17 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
      */
     public static function deactivate()
     {
-        self::$highlighter = null;
+        // 引擎会自动清理
+    }
+
+    /**
+     * 获取当前引擎名称
+     */
+    private static function getEngineName()
+    {
+        require_once __DIR__ . '/Engine/EngineFactory.php';
+        $engineType = HighlightPHP_Engine_EngineFactory::getEngineType();
+        return $engineType === 'phiki' ? 'Phiki (TextMate)' : 'highlight.php (hljs)';
     }
 
     /**
@@ -58,30 +64,28 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
             return $content;
         }
 
-        self::initHighlighter();
-        return self::processContent($content);
+        // 加载引擎
+        $engine = self::getEngine();
+        return self::processContent($content, $engine);
     }
 
     /**
-     * 初始化 Highlight.php
+     * 获取引擎实例
      */
-    private static function initHighlighter()
+    private static function getEngine()
     {
-        if (self::$highlighter === null) {
-            require_once __DIR__ . '/vendor/Highlight/Autoloader.php';
-            spl_autoload_register('\\Highlight\\Autoloader::load');
+        require_once __DIR__ . '/Engine/EngineFactory.php';
+        require_once __DIR__ . '/Engine/EngineInterface.php';
+        require_once __DIR__ . '/Engine/HighlightPhpEngine.php';
+        require_once __DIR__ . '/Engine/PhikiEngine.php';
 
-            \Highlight\Highlighter::registerAllLanguages();
-            self::$highlighter = new \Highlight\Highlighter(false);
-            self::$highlighter->setClassPrefix('hljs-');
-            self::$highlighter->setTabReplace('    ');
-        }
+        return HighlightPHP_Engine_EngineFactory::getEngine();
     }
 
     /**
      * 处理内容，高亮所有代码块
      */
-    private static function processContent($content)
+    private static function processContent($content, $engine)
     {
         libxml_use_internal_errors(true);
         $dom = new DOMDocument();
@@ -95,8 +99,11 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
             $code = self::findCodeElement($pre);
             if ($code === null) continue;
 
-            // 幂等性：已高亮则跳过
-            if (strpos($code->getAttribute('class'), 'hljs') !== false) {
+            // 幂等性：已高亮则跳过（检查任一引擎的标记）
+            $classAttr = $code->getAttribute('class');
+            if ($engine->isHighlighted($classAttr) ||
+                strpos($classAttr, 'hljs') !== false ||
+                strpos($classAttr, 'phiki') !== false) {
                 continue;
             }
 
@@ -104,22 +111,18 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
             $language = self::extractLanguage($code);
             $codeText = $code->textContent;
 
-            // 调用 highlight.php
-            $result = self::doHighlight($codeText, $language);
+            // 调用引擎高亮
+            $highlightedHtml = $engine->highlight($codeText, $language);
 
             // 构建新的 pre 和 code 元素
             $newPre = $dom->createElement('pre');
 
             $newCode = $dom->createElement('code');
-            $classes = 'hljs';
-            if ($result->language) {
-                $classes .= ' language-' . $result->language;
-            }
-            $newCode->setAttribute('class', $classes);
+            $newCode->setAttribute('class', $engine->getCodeClass($language));
 
             // 将高亮后的 HTML 作为 code 的内容
             $codeFragment = $dom->createDocumentFragment();
-            $codeFragment->appendXML($result->value);
+            $codeFragment->appendXML($highlightedHtml);
             $newCode->appendChild($codeFragment);
 
             $newPre->appendChild($newCode);
@@ -163,18 +166,7 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
             return $m[1];
         }
 
-        return null; // 让 highlight.php 自动检测
-    }
-
-    /**
-     * 调用 highlight.php 高亮
-     */
-    private static function doHighlight($codeText, $language)
-    {
-        if ($language) {
-            return self::$highlighter->highlight($language, $codeText);
-        }
-        return self::$highlighter->highlightAuto($codeText);
+        return null;
     }
 
     /**
