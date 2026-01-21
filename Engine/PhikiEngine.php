@@ -71,8 +71,17 @@ class HighlightPHP_Engine_PhikiEngine implements HighlightPHP_Engine_EngineInter
 
         try {
             // Phiki 返回完整的 <pre><code>...</code></pre>
-            return (string) $this->phiki->codeToHtml($code, $language, $this->theme);
+            $result = (string) $this->phiki->codeToHtml($code, $language, $this->theme);
+
+            // 调试：检查结果中是否包含 style 属性
+            if (strpos($result, 'style=') === false) {
+                error_log("Phiki: No style attributes found in output for language: $language, theme: $this->theme");
+            }
+
+            return $result;
         } catch (Exception $e) {
+            // 调试：记录错误
+            error_log("Phiki Exception: " . $e->getMessage());
             // 如果高亮失败，返回转义的原始代码
             return '<pre><code>' . htmlspecialchars($code) . '</code></pre>';
         }
