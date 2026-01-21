@@ -25,7 +25,7 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
         // 评论内容高亮
         Typecho_Plugin::factory('Widget_Abstract_Comments')->contentEx = __CLASS__ . '::highlight';
 
-        $message = _t('插件已激活，代码高亮功能已启用。');
+        $message = '插件已激活，代码高亮功能已启用。';
         $message .= '<br><br><strong>默认引擎：</strong>highlight.php (hljs)';
         $message .= '<br>可在插件设置中切换到 Phiki 引擎';
         $message .= '<br><br><strong>重要提示：</strong>评论高亮需要在后台设置允许 <code>class</code> 属性：';
@@ -47,40 +47,44 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
      * 获取插件配置面板
      * @param Typecho_Widget_Helper_Form $form
      */
-    public static function config(Typecho_Widget_Helper_Form $form)
+    public static function config($form)
     {
-        $form->addInput(new Typecho_Widget_Helper_Form_Element_Select(
+        // 引擎选择
+        $engine = new Typecho_Widget_Helper_Form_Element_Select(
             'engine',
             [
-                'highlight.php' => _t('highlight.php (兼容 highlight.js CSS)'),
-                'phiki' => _t('Phiki (TextMate 语法，更高精度)')
+                'highlight.php' => 'highlight.php (兼容 highlight.js CSS)',
+                'phiki' => 'Phiki (TextMate 语法，更高精度)'
             ],
             'highlight.php',
-            _t('高亮引擎'),
-            _t('highlight.php: 速度快，兼容 highlight.js 主题<br>Phiki: 精度更高，支持嵌套语法，内联样式')
-        ));
+            '高亮引擎',
+            'highlight.php: 速度快，兼容 highlight.js 主题<br>Phiki: 精度更高，支持嵌套语法，内联样式'
+        );
+        $form->addInput($engine);
 
-        $form->addInput(new Typecho_Widget_Helper_Form_Element_Select(
+        // Phiki 主题选择
+        $theme = new Typecho_Widget_Helper_Form_Element_Select(
             'phikiTheme',
             [
-                'github-light' => _t('GitHub Light'),
-                'github-dark' => _t('GitHub Dark'),
-                'monokai' => _t('Monokai'),
-                'nord' => _t('Nord'),
-                'dracula' => _t('Dracula'),
-                'one-dark-pro' => _t('One Dark Pro')
+                'github-light' => 'GitHub Light',
+                'github-dark' => 'GitHub Dark',
+                'monokai' => 'Monokai',
+                'nord' => 'Nord',
+                'dracula' => 'Dracula',
+                'one-dark-pro' => 'One Dark Pro'
             ],
             'github-light',
-            _t('Phiki 主题'),
-            _t('仅在使用 Phiki 引擎时生效')
-        ));
+            'Phiki 主题',
+            '仅在使用 Phiki 引擎时生效'
+        );
+        $form->addInput($theme);
     }
 
     /**
      * 个人用户的配置面板
      * @param Typecho_Widget_Helper_Form $form
      */
-    public static function personalConfig(Typecho_Widget_Helper_Form $form)
+    public static function personalConfig($form)
     {
         // 当前不需要个人配置
     }
