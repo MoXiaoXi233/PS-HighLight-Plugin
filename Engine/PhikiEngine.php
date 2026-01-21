@@ -68,27 +68,18 @@ class HighlightPHP_Engine_PhikiEngine implements HighlightPHP_Engine_EngineInter
         }
 
         try {
-            $html = (string) $this->phiki->codeToHtml($code, $language, $this->theme);
-
             // Phiki 返回完整的 <pre><code>...</code></pre>
-            // 我们只需要 code 内部内容，所以需要提取
-            if (preg_match('#<code[^>]*>(.*?)</code>#s', $html, $matches)) {
-                return $matches[1];
-            }
-            return $html;
+            return (string) $this->phiki->codeToHtml($code, $language, $this->theme);
         } catch (Exception $e) {
             // 如果高亮失败，返回转义的原始代码
-            return htmlspecialchars($code);
+            return '<pre><code>' . htmlspecialchars($code) . '</code></pre>';
         }
     }
 
     public function getCodeClass($language)
     {
-        $classes = 'phiki';
-        if ($language) {
-            $classes .= ' language-' . $language;
-        }
-        return $classes;
+        // Phiki 使用内联样式，不需要 class
+        return '';
     }
 
     public function getEngineName()

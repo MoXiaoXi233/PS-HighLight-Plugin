@@ -161,20 +161,25 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
             // 调用引擎高亮
             $highlightedHtml = $engine->highlight($codeText, $language);
 
-            // 构建新的 pre 和 code 元素
-            $newPre = $dom->createElement('pre');
+            // 检查是否是 Phiki 引擎（返回完整的 <pre> 结构）
+            if (strpos($highlightedHtml, '<pre') === 0) {
+                // Phiki 返回完整结构，直接替换
+                $preFragment = $dom->createDocumentFragment();
+                $preFragment->appendXML($highlightedHtml);
+                $pre->parentNode->replaceChild($preFragment->firstChild, $pre);
+            } else {
+                // highlight.php 只返回 code 内容，需要构建结构
+                $newPre = $dom->createElement('pre');
+                $newCode = $dom->createElement('code');
+                $newCode->setAttribute('class', $engine->getCodeClass($language));
 
-            $newCode = $dom->createElement('code');
-            $newCode->setAttribute('class', $engine->getCodeClass($language));
+                $codeFragment = $dom->createDocumentFragment();
+                $codeFragment->appendXML($highlightedHtml);
+                $newCode->appendChild($codeFragment);
+                $newPre->appendChild($newCode);
 
-            // 将高亮后的 HTML 作为 code 的内容
-            $codeFragment = $dom->createDocumentFragment();
-            $codeFragment->appendXML($highlightedHtml);
-            $newCode->appendChild($codeFragment);
-
-            $newPre->appendChild($newCode);
-
-            $pre->parentNode->replaceChild($newPre, $pre);
+                $pre->parentNode->replaceChild($newPre, $pre);
+            }
 
             $modified = true;
         }
