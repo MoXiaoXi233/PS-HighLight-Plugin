@@ -43,6 +43,22 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
     }
 
     /**
+     * 获取插件配置面板
+     */
+    public static function config($form)
+    {
+        // 当前不需要配置，保持接口兼容
+    }
+
+    /**
+     * 个人用户的配置面板
+     */
+    public static function personalConfig($form)
+    {
+        // 当前不需要个人配置
+    }
+
+    /**
      * 获取当前引擎名称
      */
     private static function getEngineName()
