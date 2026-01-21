@@ -48,9 +48,11 @@ class HighlightPHP_Engine_PhikiEngine implements HighlightPHP_Engine_EngineInter
                 }
             });
 
-            // Load dependencies
+            // 预加载关键文件
             require_once __DIR__ . '/../vendor/Phiki/src/Grammar/Grammar.php';
             require_once __DIR__ . '/../vendor/Phiki/src/Environment.php';
+            require_once __DIR__ . '/../vendor/Phiki/src/Theme/Theme.php';
+            require_once __DIR__ . '/../vendor/Phiki/src/Theme/ThemeRepository.php';
 
             $this->phiki = new \Phiki\Phiki();
         }
