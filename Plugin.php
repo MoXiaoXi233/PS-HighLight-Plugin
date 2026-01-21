@@ -26,7 +26,8 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
         Typecho_Plugin::factory('Widget_Abstract_Comments')->contentEx = __CLASS__ . '::highlight';
 
         $message = _t('插件已激活，代码高亮功能已启用。');
-        $message .= '<br><br><strong>当前引擎：</strong>' . self::getEngineName();
+        $message .= '<br><br><strong>默认引擎：</strong>highlight.php (hljs)';
+        $message .= '<br>可在插件设置中切换到 Phiki 引擎';
         $message .= '<br><br><strong>重要提示：</strong>评论高亮需要在后台设置允许 <code>class</code> 属性：';
         $message .= '<br>进入 <a href="' . Helper::options()->adminUrl . 'options-discussion.php">设置 → 评论</a>，';
         $message .= '将"评论允许的 HTML 标签"修改为：<code>&lt;pre class=""&gt;&lt;code class=""&gt;&lt;span class=""&gt;</code>';
@@ -44,8 +45,9 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
 
     /**
      * 获取插件配置面板
+     * @param Typecho_Widget_Helper_Form $form
      */
-    public static function config($form)
+    public static function config(Typecho_Widget_Helper_Form $form)
     {
         $form->addInput(new Typecho_Widget_Helper_Form_Element_Select(
             'engine',
@@ -76,20 +78,11 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
 
     /**
      * 个人用户的配置面板
+     * @param Typecho_Widget_Helper_Form $form
      */
-    public static function personalConfig($form)
+    public static function personalConfig(Typecho_Widget_Helper_Form $form)
     {
         // 当前不需要个人配置
-    }
-
-    /**
-     * 获取当前引擎名称
-     */
-    private static function getEngineName()
-    {
-        require_once __DIR__ . '/Engine/EngineFactory.php';
-        $engineType = HighlightPHP_Engine_EngineFactory::getEngineType();
-        return $engineType === 'phiki' ? 'Phiki (TextMate)' : 'highlight.php (hljs)';
     }
 
     /**
@@ -124,8 +117,8 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
         $pluginConfig = $options->plugin('HighlightPHP');
 
         $config = [
-            'engine' => $pluginConfig->engine ?? 'highlight.php',
-            'phiki_theme' => $pluginConfig->phikiTheme ?? 'github-light',
+            'engine' => isset($pluginConfig->engine) ? $pluginConfig->engine : 'highlight.php',
+            'phiki_theme' => isset($pluginConfig->phikiTheme) ? $pluginConfig->phikiTheme : 'github-light',
         ];
 
         HighlightPHP_Engine_EngineFactory::setConfig($config);
