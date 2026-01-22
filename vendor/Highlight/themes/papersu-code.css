@@ -28,11 +28,11 @@
   --code-inline-bg: #262a2b;
   --code-text: #c1bcb4;
   --code-muted: #bdb7af;
-  --code-blue: #365acb;
-  --code-green: #2f7d4f;
-  --code-yellow: #b7791f;
-  --code-red: #b84a4a;
-  --code-pink: #b94a73;
+  --code-blue: #8fa2e0;
+  --code-green: #8fcfa8;
+  --code-yellow: #e0c98a;
+  --code-red: #e0a8a8;
+  --code-pink: #e0a8c0;
 }
 
 /* 代码块本体 */
@@ -44,7 +44,7 @@ pre {
     border-radius: 8px;
     overflow: auto;
     font-family: ui-monospace, JetBrains Mono, SFMono-Regular, Menlo, Monaco, Consolas, Andale Mono, Liberation Mono, Ubuntu Mono, Courier New, monospace;
-    font-size: .9em;
+    font-size: 0.92em;
     word-wrap: break-word;
     position: relative;
     max-height: 750px;
@@ -65,7 +65,6 @@ pre code.hljs {
     padding: 0.75em 1em;
 
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.92em;
     line-height: 1.7;
 
     color: var(--code-text);

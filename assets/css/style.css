@@ -1,0 +1,126 @@
+/**
+ * PS_Highlight 插件样式
+ * 参考简洁优雅的实现方式
+ */
+
+/* 代码块包装容器 */
+.code-block-wrapper {
+    position: relative;
+    margin: 16px 0;
+    overflow: hidden;
+}
+
+/* 代码块基础样式 */
+.code-block-wrapper pre {
+    position: relative;
+    margin: 0;
+    padding: 16px;
+    overflow-x: auto;
+    background-color: var(--code-bg, #f6f8fa);
+    border-radius: 6px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.code-block-wrapper code {
+    background: transparent;
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+/* 显示行号时的样式 */
+.code-block-extension-code-show-num {
+    counter-reset: line;
+}
+
+.code-block-extension-code-line {
+    line-height: 1.8;
+}
+
+.code-block-extension-code-line::before {
+    counter-increment: line;
+    content: counter(line);
+    display: inline-block;
+    margin-right: 1em;
+    text-align: right;
+    color: var(--code-linenum-color, #8c959f);
+    font-size: 0.9em;
+    user-select: none;
+    opacity: 0.6;
+}
+
+/* 复制按钮样式 */
+.code-block-wrapper .copy-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 12px;
+    background-color: transparent;
+    border-radius: 4px;
+    border: none;
+    color: var(--text2-color, #24292f);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    z-index: 10;
+
+    /* 默认隐藏 */
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 鼠标悬停时显示 */
+.code-block-wrapper:hover .copy-button {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.code-block-wrapper .copy-button:hover {
+    background-color: var(--code-copy-hover-bg, rgba(0, 0, 0, 0.12));
+    border-color: var(--code-copy-hover-border, rgba(0, 0, 0, 0.2));
+}
+
+.code-block-wrapper .copy-button:active {
+    transform: scale(0.96);
+}
+
+/* 暗色主题适配 */
+@media (prefers-color-scheme: dark) {
+    .code-block-wrapper pre {
+        --code-bg: #0d1117;
+    }
+
+    .code-block-wrapper .copy-button {
+        --code-copy-bg: rgba(255, 255, 255, 0.06);
+        --code-copy-border: rgba(255, 255, 255, 0.1);
+        --code-copy-text: #c9d1d9;
+    }
+
+    .code-block-wrapper .copy-button:hover {
+        --code-copy-hover-bg: rgba(255, 255, 255, 0.12);
+        --code-copy-hover-border: rgba(255, 255, 255, 0.2);
+    }
+
+    .code-block-extension-code-line::before {
+        --code-linenum-color: #6e7681;
+    }
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+    .code-block-wrapper pre {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .code-block-wrapper .copy-button {
+        top: 6px;
+        right: 6px;
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+}
