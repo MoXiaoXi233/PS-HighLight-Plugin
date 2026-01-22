@@ -28,9 +28,9 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
         $message = '插件已激活，代码高亮功能已启用。';
         $message .= '<br><br><strong>默认引擎：</strong>highlight.php (hljs)';
         $message .= '<br>可在插件设置中切换到 Phiki 引擎';
-        $message .= '<br><br><strong>重要提示：</strong>评论高亮需要在后台设置允许 <code>class</code> 属性：';
+        $message .= '<br><br><strong>重要提示：</strong>评论高亮需要在后台设置允许 <code>class</code> 和 <code>style</code> 属性：';
         $message .= '<br>进入 <a href="' . Helper::options()->adminUrl . 'options-discussion.php">设置 → 评论</a>，';
-        $message .= '将"评论允许的 HTML 标签"修改为：<code>&lt;pre class=""&gt;&lt;code class=""&gt;&lt;span class=""&gt;</code>';
+        $message .= '将"评论允许的 HTML 标签"修改为：<code>&lt;pre class="" style=""&gt;&lt;code class="" style=""&gt;&lt;span class="" style=""&gt;</code>';
 
         return $message;
     }
@@ -126,7 +126,9 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
         ];
 
         HighlightPHP_Engine_EngineFactory::setConfig($config);
-        return HighlightPHP_Engine_EngineFactory::getEngine();
+        $engine = HighlightPHP_Engine_EngineFactory::getEngine();
+
+        return $engine;
     }
 
     /**
@@ -213,8 +215,8 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
     {
         $class = $code->getAttribute('class');
 
-        // 匹配 language-xxx
-        if (preg_match('/\blanguage-([a-z0-9_+#-]+)\b/i', $class, $m)) {
+        // 匹配 language-xxx 或 lang-xxx
+        if (preg_match('/\b(?:language|lang)-([a-z0-9_+#-]+)\b/i', $class, $m)) {
             return $m[1];
         }
 

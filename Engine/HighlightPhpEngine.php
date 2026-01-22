@@ -20,12 +20,15 @@ class HighlightPHP_Engine_HighlightPhpEngine implements HighlightPHP_Engine_Engi
         return self::$instance;
     }
 
+    private static $initialized = false;
+
     public function init()
     {
-        if (self::$instance === null) {
+        if (!self::$initialized) {
             require_once __DIR__ . '/../vendor/Highlight/Autoloader.php';
             spl_autoload_register('\\Highlight\\Autoloader::load');
             \Highlight\Highlighter::registerAllLanguages();
+            self::$initialized = true;
         }
     }
 
