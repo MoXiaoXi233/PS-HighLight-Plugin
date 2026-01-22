@@ -9,8 +9,8 @@
   - **Phiki**: 基于 TextMate 语法，精度更高，支持嵌套语法，内联样式
 
 - **丰富的主题**
-  - highlight.php: 13+ 经典主题（GitHub, Monokai, Dracula, **Papersu** 等）
-  - Phiki: 60+ 现代主题（Catppuccin, Rose Pine, Tokyo Night, **Papersu** 等）
+  - highlight.php: 13+ 经典主题（GitHub, Monokai, Dracula等）
+  - Phiki: 60+ 现代主题（Catppuccin, Rose Pine, Tokyo Night等）
 
 - **开箱即用**
 
