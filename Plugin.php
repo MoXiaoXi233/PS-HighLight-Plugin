@@ -1,19 +1,23 @@
 <?php
+
+namespace TypechoPlugin\PS_Highlight;
+
+use Typecho\Plugin\PluginInterface;
+use Typecho\Widget\Helper\Form;
+use Typecho\Widget\Helper\Form\Element\Select;
+use Widget\Options;
+
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 /**
- * PS-Highlight - Typecho 服务器端代码高亮插件
- *
- * 支持两种高亮引擎：
- * - highlight.php: 兼容 highlight.js，使用 CSS 类名
- * - Phiki: 基于 TextMate 语法，使用内联样式
+ * Typecho 服务器端代码高亮插件，采用后端渲染的方案，前端友好
  *
  * @package PS_Highlight
- * @author pure
- * @version 2.0.0
- * @link https://github.com
+ * @author MoXiify
+ * @version 1.0.0
+ * @link https://www.moxiify.cn
  */
-class PS_Highlight_Plugin implements Typecho_Plugin_Interface
+class Plugin implements PluginInterface
 {
     /**
      * 激活插件方法
@@ -21,15 +25,15 @@ class PS_Highlight_Plugin implements Typecho_Plugin_Interface
     public static function activate()
     {
         // 文章内容高亮（文章页、独立页等）
-        Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = __CLASS__ . '::highlight';
+        \Typecho\Plugin::factory('Widget_Abstract_Contents')->contentEx = __CLASS__ . '::highlight';
         // 评论内容高亮
-        Typecho_Plugin::factory('Widget_Abstract_Comments')->contentEx = __CLASS__ . '::highlight';
+        \Typecho\Plugin::factory('Widget_Abstract_Comments')->contentEx = __CLASS__ . '::highlight';
 
         $message = '插件已激活，代码高亮功能已启用。';
         $message .= '<br><br><strong>默认引擎：</strong>highlight.php (hljs)';
         $message .= '<br>可在插件设置中切换到 Phiki 引擎';
         $message .= '<br><br><strong>重要提示：</strong>评论高亮需要在后台设置允许 <code>class</code> 和 <code>style</code> 属性：';
-        $message .= '<br>进入 <a href="' . Helper::options()->adminUrl . 'options-discussion.php">设置 → 评论</a>，';
+        $message .= '<br>进入 <a href="' . Options::alloc()->adminUrl . 'options-discussion.php">设置 → 评论</a>，';
         $message .= '将"评论允许的 HTML 标签"修改为：<code>&lt;pre class="" style=""&gt;&lt;code class="" style=""&gt;&lt;span class="" style=""&gt;</code>';
 
         return $message;
@@ -45,12 +49,12 @@ class PS_Highlight_Plugin implements Typecho_Plugin_Interface
 
     /**
      * 获取插件配置面板
-     * @param Typecho_Widget_Helper_Form $form
+     * @param Form $form
      */
-    public static function config($form)
+    public static function config(Form $form)
     {
         // 引擎选择
-        $engine = new Typecho_Widget_Helper_Form_Element_Select(
+        $engine = new Select(
             'engine',
             [
                 'highlight.php' => 'highlight.php (兼容 highlight.js CSS)',
@@ -78,7 +82,7 @@ class PS_Highlight_Plugin implements Typecho_Plugin_Interface
             'solarized-dark' => 'Solarized Dark'
         ];
 
-        $hljsTheme = new Typecho_Widget_Helper_Form_Element_Select(
+        $hljsTheme = new Select(
             'hljsTheme',
             $hljsThemes,
             'github',
@@ -89,7 +93,7 @@ class PS_Highlight_Plugin implements Typecho_Plugin_Interface
 
         // Phiki 主题选择
         $phikiThemes = self::getPhikiThemes();
-        $phikiTheme = new Typecho_Widget_Helper_Form_Element_Select(
+        $phikiTheme = new Select(
             'phikiTheme',
             $phikiThemes,
             'github-light',
@@ -124,9 +128,9 @@ class PS_Highlight_Plugin implements Typecho_Plugin_Interface
 
     /**
      * 个人用户的配置面板
-     * @param Typecho_Widget_Helper_Form $form
+     * @param Form $form
      */
-    public static function personalConfig($form)
+    public static function personalConfig(Form $form)
     {
         // 当前不需要个人配置
     }
@@ -159,16 +163,16 @@ class PS_Highlight_Plugin implements Typecho_Plugin_Interface
         require_once __DIR__ . '/Engine/PhikiEngine.php';
 
         // 读取插件配置
-        $options = Helper::options();
-        $pluginConfig = $options->plugin('HighlightPHP');
+        $options = Options::alloc();
+        $pluginConfig = $options->plugin('PS_Highlight');
 
         $config = [
             'engine' => isset($pluginConfig->engine) ? $pluginConfig->engine : 'highlight.php',
             'phiki_theme' => isset($pluginConfig->phikiTheme) ? $pluginConfig->phikiTheme : 'github-light',
         ];
 
-        PS_Highlight_Engine_EngineFactory::setConfig($config);
-        $engine = PS_Highlight_Engine_EngineFactory::getEngine();
+        Engine\EngineFactory::setConfig($config);
+        $engine = Engine\EngineFactory::getEngine();
 
         return $engine;
     }
@@ -179,7 +183,7 @@ class PS_Highlight_Plugin implements Typecho_Plugin_Interface
     private static function processContent($content, $engine)
     {
         libxml_use_internal_errors(true);
-        $dom = new DOMDocument();
+        $dom = new \DOMDocument();
         $dom->loadHTML('<?xml encoding="UTF-8">' . $content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         libxml_clear_errors();
 
@@ -240,10 +244,10 @@ class PS_Highlight_Plugin implements Typecho_Plugin_Interface
     /**
      * 查找 pre 下的 code 元素
      */
-    private static function findCodeElement(DOMElement $pre)
+    private static function findCodeElement(\DOMElement $pre)
     {
         foreach ($pre->childNodes as $child) {
-            if ($child instanceof DOMElement && $child->tagName === 'code') {
+            if ($child instanceof \DOMElement && $child->tagName === 'code') {
                 return $child;
             }
         }
@@ -253,7 +257,7 @@ class PS_Highlight_Plugin implements Typecho_Plugin_Interface
     /**
      * 从 class 中提取语言
      */
-    private static function extractLanguage(DOMElement $code)
+    private static function extractLanguage(\DOMElement $code)
     {
         $class = $code->getAttribute('class');
 

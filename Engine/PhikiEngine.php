@@ -1,10 +1,13 @@
 <?php
+
+namespace TypechoPlugin\PS_Highlight\Engine;
+
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 /**
  * Phiki 引擎实现
  */
-class HighlightPHP_Engine_PhikiEngine implements HighlightPHP_Engine_EngineInterface
+class PhikiEngine implements EngineInterface
 {
     private static $instance = null;
     private $phiki = null;
@@ -27,7 +30,7 @@ class HighlightPHP_Engine_PhikiEngine implements HighlightPHP_Engine_EngineInter
         if ($this->phiki === null) {
             // 从工厂配置读取主题
             require_once __DIR__ . '/EngineFactory.php';
-            $config = PS_Highlight_Engine_EngineFactory::getConfig();
+            $config = EngineFactory::getConfig();
             $this->theme = $config['phiki_theme'] ?? 'github-light';
 
             // 预加载核心依赖文件（按依赖顺序）
@@ -168,7 +171,7 @@ class HighlightPHP_Engine_PhikiEngine implements HighlightPHP_Engine_EngineInter
 
         try {
             return (string) $this->phiki->codeToHtml($code, $language, $this->theme);
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             return '<pre><code>' . htmlspecialchars($code) . '</code></pre>';
         }
     }

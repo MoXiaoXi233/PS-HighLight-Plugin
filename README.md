@@ -13,9 +13,6 @@
   - Phiki: 60+ 现代主题（Catppuccin, Rose Pine, Tokyo Night 等）
 
 - **开箱即用**
-  - Phiki 引擎使用内联样式，无需引入 CSS 文件
-  - 支持文章和评论代码高亮
-  - 幂等性设计，重复处理不会出错
 
 ## 安装
 
@@ -31,28 +28,6 @@
 |------|------|------|----------|
 | **highlight.php** | 速度快，兼容性好 | 精度较低 | 需要引入 CSS |
 | **Phiki** | 精度高，支持嵌套 | 相对较慢 | 内联样式 |
-
-### highlight.php 主题
-
-GitHub, GitHub Dark, Monokai, Dracula, Nord, Atom One Dark/Light, VS Code, Xcode, Solarized 等
-
-**使用方法**: 在主题中引入对应的 highlight.js CSS 文件
-
-```html
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
-```
-
-### Phiki 主题
-
-60+ 内置主题，包括：
-
-- GitHub 系列 (Light, Dark, Dimmed)
-- Catppuccin 系列 (Frappe, Latte, Macchiato, Mocha)
-- Gruvbox 系列 (Dark/Light, Hard/Medium/Soft)
-- Rose Pine 系列 (Dawn, Moon)
-- 以及 Monokai, Nord, Dracula, Tokyo Night, Vitesse 等
-
-**无需引入 CSS**，直接选择即可使用。
 
 ## 评论高亮
 
@@ -80,8 +55,3 @@ GitHub, GitHub Dark, Monokai, Dracula, Nord, Atom One Dark/Light, VS Code, Xcode
 ## 许可证
 
 MIT License
-
----
-
-**作者**: pure
-**版本**: 2.0.0

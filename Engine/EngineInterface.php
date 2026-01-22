@@ -1,10 +1,13 @@
 <?php
+
+namespace TypechoPlugin\PS_Highlight\Engine;
+
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 /**
  * 代码高亮引擎接口
  */
-interface HighlightPHP_Engine_EngineInterface
+interface EngineInterface
 {
     /**
      * 初始化引擎

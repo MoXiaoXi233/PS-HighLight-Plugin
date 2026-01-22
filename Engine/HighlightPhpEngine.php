@@ -1,10 +1,13 @@
 <?php
+
+namespace TypechoPlugin\PS_Highlight\Engine;
+
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 /**
  * highlight.php 引擎实现
  */
-class HighlightPHP_Engine_HighlightPhpEngine implements HighlightPHP_Engine_EngineInterface
+class HighlightPhpEngine implements EngineInterface
 {
     private static $instance = null;
 

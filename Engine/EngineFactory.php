@@ -1,10 +1,13 @@
 <?php
+
+namespace TypechoPlugin\PS_Highlight\Engine;
+
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 /**
  * 引擎工厂
  */
-class PS_Highlight_Engine_EngineFactory
+class EngineFactory
 {
     const ENGINE_HIGHLIGHT_PHP = 'highlight.php';
     const ENGINE_PHIKI = 'phiki';
@@ -36,7 +39,7 @@ class PS_Highlight_Engine_EngineFactory
 
     /**
      * 获取当前引擎
-     * @return HighlightPHP_Engine_EngineInterface
+     * @return EngineInterface
      */
     public static function getEngine()
     {
@@ -45,11 +48,11 @@ class PS_Highlight_Engine_EngineFactory
 
             switch ($engineType) {
                 case self::ENGINE_PHIKI:
-                    self::$engine = HighlightPHP_Engine_PhikiEngine::getInstance();
+                    self::$engine = PhikiEngine::getInstance();
                     break;
                 case self::ENGINE_HIGHLIGHT_PHP:
                 default:
-                    self::$engine = HighlightPHP_Engine_HighlightPhpEngine::getInstance();
+                    self::$engine = HighlightPhpEngine::getInstance();
                     break;
             }
 
