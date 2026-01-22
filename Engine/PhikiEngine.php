@@ -27,7 +27,7 @@ class HighlightPHP_Engine_PhikiEngine implements HighlightPHP_Engine_EngineInter
         if ($this->phiki === null) {
             // 从工厂配置读取主题
             require_once __DIR__ . '/EngineFactory.php';
-            $config = HighlightPHP_Engine_EngineFactory::getConfig();
+            $config = PS_Highlight_Engine_EngineFactory::getConfig();
             $this->theme = $config['phiki_theme'] ?? 'github-light';
 
             // 预加载核心依赖文件（按依赖顺序）

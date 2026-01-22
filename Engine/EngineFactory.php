@@ -4,7 +4,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /**
  * 引擎工厂
  */
-class HighlightPHP_Engine_EngineFactory
+class PS_Highlight_Engine_EngineFactory
 {
     const ENGINE_HIGHLIGHT_PHP = 'highlight.php';
     const ENGINE_PHIKI = 'phiki';

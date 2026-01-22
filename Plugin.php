@@ -2,18 +2,18 @@
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 /**
- * HighlightPHP - Typecho 服务器端代码高亮插件
+ * PS-Highlight - Typecho 服务器端代码高亮插件
  *
  * 支持两种高亮引擎：
  * - highlight.php: 兼容 highlight.js，使用 CSS 类名
  * - Phiki: 基于 TextMate 语法，使用内联样式
  *
- * @package HighlightPHP
+ * @package PS_Highlight
  * @author pure
  * @version 2.0.0
  * @link https://github.com
  */
-class HighlightPHP_Plugin implements Typecho_Plugin_Interface
+class PS_Highlight_Plugin implements Typecho_Plugin_Interface
 {
     /**
      * 激活插件方法
@@ -62,22 +62,64 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
         );
         $form->addInput($engine);
 
+        // highlight.php 主题选择
+        $hljsThemes = [
+            'github' => 'GitHub',
+            'github-dark' => 'GitHub Dark',
+            'monokai' => 'Monokai',
+            'dracula' => 'Dracula',
+            'nord' => 'Nord',
+            'atom-one-dark' => 'Atom One Dark',
+            'atom-one-light' => 'Atom One Light',
+            'vs' => 'VS Code',
+            'vs2015' => 'VS Code 2015',
+            'xcode' => 'Xcode',
+            'solarized-light' => 'Solarized Light',
+            'solarized-dark' => 'Solarized Dark'
+        ];
+
+        $hljsTheme = new Typecho_Widget_Helper_Form_Element_Select(
+            'hljsTheme',
+            $hljsThemes,
+            'github',
+            'highlight.php 主题',
+            '仅在使用 highlight.php 引擎时生效，需要在主题中引入对应的 CSS 文件'
+        );
+        $form->addInput($hljsTheme);
+
         // Phiki 主题选择
-        $theme = new Typecho_Widget_Helper_Form_Element_Select(
+        $phikiThemes = self::getPhikiThemes();
+        $phikiTheme = new Typecho_Widget_Helper_Form_Element_Select(
             'phikiTheme',
-            [
-                'github-light' => 'GitHub Light',
-                'github-dark' => 'GitHub Dark',
-                'monokai' => 'Monokai',
-                'nord' => 'Nord',
-                'dracula' => 'Dracula',
-                'one-dark-pro' => 'One Dark Pro'
-            ],
+            $phikiThemes,
             'github-light',
             'Phiki 主题',
             '仅在使用 Phiki 引擎时生效'
         );
-        $form->addInput($theme);
+        $form->addInput($phikiTheme);
+    }
+
+    /**
+     * 获取所有可用的 Phiki 主题
+     */
+    private static function getPhikiThemes()
+    {
+        $themes = [];
+        $themeDir = __DIR__ . '/vendor/Phiki/resources/themes/';
+
+        if (is_dir($themeDir)) {
+            foreach (glob($themeDir . '*.json') as $file) {
+                $name = basename($file, '.json');
+                // 转换为可读标题
+                $label = str_replace(['-', '_'], ' ', $name);
+                $label = ucwords($label);
+                $themes[$name] = $label;
+            }
+        }
+
+        // 按名称排序
+        asort($themes);
+        return $themes;
     }
 
     /**
@@ -125,8 +167,8 @@ class HighlightPHP_Plugin implements Typecho_Plugin_Interface
             'phiki_theme' => isset($pluginConfig->phikiTheme) ? $pluginConfig->phikiTheme : 'github-light',
         ];
 
-        HighlightPHP_Engine_EngineFactory::setConfig($config);
-        $engine = HighlightPHP_Engine_EngineFactory::getEngine();
+        PS_Highlight_Engine_EngineFactory::setConfig($config);
+        $engine = PS_Highlight_Engine_EngineFactory::getEngine();
 
         return $engine;
     }
