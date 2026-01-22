@@ -260,99 +260,104 @@ class Plugin implements PluginInterface
      */
     private static function processContent($content, $engine)
     {
-        libxml_use_internal_errors(true);
-        $dom = new \DOMDocument();
-        $dom->loadHTML('<?xml encoding="UTF-8">' . $content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-        libxml_clear_errors();
+        // 使用正则提取并替换每个 <pre> 代码块，避免处理整个文档导致 HTML 实体被双重编码
+        $content = preg_replace_callback(
+            '/<pre(\s[^>]*)?>.*?<\/pre>/is',
+            function($matches) use ($engine) {
+                $preTag = $matches[0];
 
-        // 获取插件配置
-        $options = Options::alloc();
-        $pluginConfig = $options->plugin('PS_Highlight');
-        $showLineNumbers = isset($pluginConfig->showLineNumbers) && in_array('1', (array)$pluginConfig->showLineNumbers);
+                // 使用 DOMDocument 处理单个 pre 块
+                libxml_use_internal_errors(true);
+                $dom = new \DOMDocument();
+                $dom->loadHTML('<?xml encoding="UTF-8">' . $preTag, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+                libxml_clear_errors();
 
-        $pres = $dom->getElementsByTagName('pre');
-        $modified = false;
+                $pres = $dom->getElementsByTagName('pre');
+                if ($pres->length === 0) {
+                    return $preTag;
+                }
 
-        foreach ($pres as $pre) {
-            $code = self::findCodeElement($pre);
-            if ($code === null) continue;
+                $pre = $pres->item(0);
+                $code = self::findCodeElement($pre);
+                if ($code === null) {
+                    return $preTag;
+                }
 
-            // 幂等性：已高亮则跳过（检查任一引擎的标记）
-            $classAttr = $code->getAttribute('class');
-            if ($engine->isHighlighted($classAttr) ||
-                strpos($classAttr, 'hljs') !== false ||
-                strpos($classAttr, 'phiki') !== false) {
-                continue;
-            }
+                // 幂等性：已高亮则跳过
+                $classAttr = $code->getAttribute('class');
+                if ($engine->isHighlighted($classAttr) ||
+                    strpos($classAttr, 'hljs') !== false ||
+                    strpos($classAttr, 'phiki') !== false) {
+                    return $preTag;
+                }
 
-            // 提取语言和代码
-            $language = self::extractLanguage($code);
-            $codeText = $code->textContent;
+                // 提取语言和代码
+                $language = self::extractLanguage($code);
+                $codeText = $code->textContent;
 
-            // 调用引擎高亮
-            $highlightedHtml = $engine->highlight($codeText, $language);
+                // 调用引擎高亮
+                $highlightedHtml = $engine->highlight($codeText, $language);
 
-            // 检查是否是 Phiki 引擎（返回完整的 <pre> 结构）
-            if (strpos($highlightedHtml, '<pre') === 0) {
-                // Phiki 返回完整结构
-                if ($showLineNumbers) {
-                    // 需要添加行号，处理 HTML
-                    $processedHtml = self::addLineNumbersToHtml($highlightedHtml, true);
-                    $preFragment = $dom->createDocumentFragment();
-                    $preFragment->appendXML($processedHtml);
-                    $newPre = $preFragment->firstChild;
+                // 获取插件配置
+                $options = Options::alloc();
+                $pluginConfig = $options->plugin('PS_Highlight');
+                $showLineNumbers = isset($pluginConfig->showLineNumbers) && in_array('1', (array)$pluginConfig->showLineNumbers);
 
-                    // 添加行号类到 code 元素
-                    $code = $newPre->getElementsByTagName('code')->item(0);
-                    if ($code) {
-                        $class = $code->getAttribute('class');
-                        $class = trim($class . ' code-block-extension-code-show-num');
-                        $code->setAttribute('class', $class);
+                // 检查是否是 Phiki 引擎（返回完整的 <pre> 结构）
+                if (strpos($highlightedHtml, '<pre') === 0) {
+                    // Phiki 返回完整结构
+                    if ($showLineNumbers) {
+                        // 需要添加行号，处理 HTML
+                        $processedHtml = self::addLineNumbersToHtml($highlightedHtml);
+                        $preFragment = $dom->createDocumentFragment();
+                        $preFragment->appendXML($processedHtml);
+                        $newPre = $preFragment->firstChild;
+
+                        // 添加行号类到 code 元素
+                        $code = $newPre->getElementsByTagName('code')->item(0);
+                        if ($code) {
+                            $class = $code->getAttribute('class');
+                            $class = trim($class . ' code-block-extension-code-show-num');
+                            $code->setAttribute('class', $class);
+                        }
+
+                        $result = $dom->saveHTML($newPre);
+                    } else {
+                        // 不需要添加行号，直接使用原始 HTML（避免 DOM 处理破坏样式）
+                        $result = $highlightedHtml;
+                    }
+                } else {
+                    // highlight.php 只返回 code 内容，需要构建结构
+                    $newPre = $dom->createElement('pre');
+                    $newCode = $dom->createElement('code');
+                    $classes = $engine->getCodeClass($language);
+                    if ($showLineNumbers) {
+                        $classes = trim($classes . ' code-block-extension-code-show-num');
+                    }
+                    $newCode->setAttribute('class', $classes);
+
+                    // 添加行号处理
+                    if ($showLineNumbers) {
+                        $processedHtml = self::addLineNumbersToHtmlForHighlight($highlightedHtml);
+                    } else {
+                        $processedHtml = $highlightedHtml;
                     }
 
-                    $pre->parentNode->replaceChild($newPre, $pre);
-                } else {
-                    // 不需要添加行号，直接使用原始 HTML（避免 DOM 处理破坏样式）
-                    $preFragment = $dom->createDocumentFragment();
-                    $preFragment->appendXML($highlightedHtml);
-                    $newPre = $preFragment->firstChild;
-                    $pre->parentNode->replaceChild($newPre, $pre);
-                }
-            } else {
-                // highlight.php 只返回 code 内容，需要构建结构
-                $newPre = $dom->createElement('pre');
-                $newCode = $dom->createElement('code');
-                $classes = $engine->getCodeClass($language);
-                if ($showLineNumbers) {
-                    $classes = trim($classes . ' code-block-extension-code-show-num');
-                }
-                $newCode->setAttribute('class', $classes);
+                    $codeFragment = $dom->createDocumentFragment();
+                    $codeFragment->appendXML($processedHtml);
+                    $newCode->appendChild($codeFragment);
+                    $newPre->appendChild($newCode);
 
-                // 添加行号处理
-                if ($showLineNumbers) {
-                    $processedHtml = self::addLineNumbersToHtmlForHighlight($highlightedHtml);
-                } else {
-                    $processedHtml = $highlightedHtml;
+                    $result = $dom->saveHTML($newPre);
                 }
 
-                $codeFragment = $dom->createDocumentFragment();
-                $codeFragment->appendXML($processedHtml);
-                $newCode->appendChild($codeFragment);
-                $newPre->appendChild($newCode);
+                // 清理 XML 声明
+                return self::cleanHtml($result);
+            },
+            $content
+        );
 
-                $pre->parentNode->replaceChild($newPre, $pre);
-            }
-
-            $modified = true;
-        }
-
-        if (!$modified) {
-            return $content;
-        }
-
-        // 保存并清理 HTML
-        $html = $dom->saveHTML();
-        return self::cleanHtml($html);
+        return $content;
     }
 
     /**
