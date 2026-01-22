@@ -161,11 +161,51 @@
         config: CONFIG
     };
 
+    // 初始化 MutationObserver
+    function initObserver() {
+        const observer = new MutationObserver(function(mutations) {
+            let shouldProcess = false;
+
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes.length > 0) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) {
+                            if (node.tagName === 'PRE' && node.querySelector('code')) {
+                                shouldProcess = true;
+                            } else if (node.querySelectorAll) {
+                                const pres = node.querySelectorAll('pre code');
+                                if (pres.length > 0) {
+                                    shouldProcess = true;
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (shouldProcess) {
+                processAllCodeBlocks();
+            }
+        });
+
+        // 开始观察
+        if (document.body) {
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+    }
+
     // 页面加载完成后初始化
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            initObserver();
+        });
     } else {
         init();
+        initObserver();
     }
 
     // 监听 Swup 页面切换事件
@@ -173,37 +213,5 @@
 
     // 监听 PJAX 完成事件（如果使用 PJAX）
     document.addEventListener('pjax:complete', reinit);
-
-    // 使用 MutationObserver 监听动态添加的代码块
-    const observer = new MutationObserver(function(mutations) {
-        let shouldProcess = false;
-
-        mutations.forEach(function(mutation) {
-            if (mutation.addedNodes.length > 0) {
-                mutation.addedNodes.forEach(function(node) {
-                    if (node.nodeType === 1) {
-                        if (node.tagName === 'PRE' && node.querySelector('code')) {
-                            shouldProcess = true;
-                        } else if (node.querySelectorAll) {
-                            const pres = node.querySelectorAll('pre code');
-                            if (pres.length > 0) {
-                                shouldProcess = true;
-                            }
-                        }
-                    }
-                });
-            }
-        });
-
-        if (shouldProcess) {
-            processAllCodeBlocks();
-        }
-    });
-
-    // 开始观察
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
 
 })();
