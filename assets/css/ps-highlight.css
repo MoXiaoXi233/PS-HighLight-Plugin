@@ -16,9 +16,7 @@
     margin: 0;
     padding: 16px;
     overflow-x: auto;
-    background-color: var(--code-bg, #f6f8fa);
     border-radius: 6px;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 14px;
     line-height: 1.6;
 }
@@ -90,19 +88,10 @@
 
 /* 暗色主题适配 */
 @media (prefers-color-scheme: dark) {
-    .code-block-wrapper pre {
-        --code-bg: #0d1117;
-    }
-
     .code-block-wrapper .copy-button {
         --code-copy-bg: rgba(255, 255, 255, 0.06);
         --code-copy-border: rgba(255, 255, 255, 0.1);
         --code-copy-text: #c9d1d9;
-    }
-
-    .code-block-wrapper .copy-button:hover {
-        --code-copy-hover-bg: rgba(255, 255, 255, 0.12);
-        --code-copy-hover-border: rgba(255, 255, 255, 0.2);
     }
 
     .code-block-extension-code-line::before {

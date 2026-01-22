@@ -213,7 +213,7 @@ class Plugin implements PluginInterface
         $pluginConfig = $options->plugin('PS_Highlight');
 
         // 输出插件样式
-        echo '<link rel="stylesheet" href="' . htmlspecialchars($pluginUrl) . '/assets/css/style.css">' . "\n";
+        echo '<link rel="stylesheet" href="' . htmlspecialchars($pluginUrl) . '/assets/css/ps-highlight.css">' . "\n";
 
         // 输出高亮引擎样式（仅 highlight.php 需要）
         $cssUrl = self::getStylesheetUrl();
@@ -227,7 +227,7 @@ class Plugin implements PluginInterface
         echo '<script>window.PS_HIGHLIGHT_CONFIG = {showCopyButton:' . $showCopyButton . '};</script>' . "\n";
 
         // 输出 JavaScript 文件
-        echo '<script src="' . htmlspecialchars($pluginUrl) . '/assets/js/main.js"></script>' . "\n";
+        echo '<script src="' . htmlspecialchars($pluginUrl) . '/assets/js/ps-highlight.js"></script>' . "\n";
     }
 
     /**
