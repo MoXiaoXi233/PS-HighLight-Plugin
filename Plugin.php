@@ -29,6 +29,9 @@ class Plugin implements PluginInterface
         // 评论内容高亮
         \Typecho\Plugin::factory('Widget_Abstract_Comments')->contentEx = __CLASS__ . '::highlight';
 
+        // 自动输出 CSS 到 <head>
+        \Typecho\Plugin::factory('Widget_Archive')->header = __CLASS__ . '::header';
+
         $message = '插件已激活，代码高亮功能已启用。';
         $message .= '<br><br><strong>默认引擎：</strong>highlight.php (hljs)';
         $message .= '<br>可在插件设置中切换到 Phiki 引擎';
@@ -79,7 +82,8 @@ class Plugin implements PluginInterface
             'vs2015' => 'VS Code 2015',
             'xcode' => 'Xcode',
             'solarized-light' => 'Solarized Light',
-            'solarized-dark' => 'Solarized Dark'
+            'solarized-dark' => 'Solarized Dark',
+            'papersu-code' => 'PaperSu'
         ];
 
         $hljsTheme = new Select(
@@ -150,6 +154,43 @@ class Plugin implements PluginInterface
         // 加载引擎
         $engine = self::getEngine();
         return self::processContent($content, $engine);
+    }
+
+    /**
+     * 获取当前引擎类型的 CSS 文件 URL
+     * @return string|null CSS 文件 URL，如果使用 Phiki 引擎则返回 null
+     */
+    public static function getStylesheetUrl()
+    {
+        $options = Options::alloc();
+        $pluginConfig = $options->plugin('PS_Highlight');
+        $engine = isset($pluginConfig->engine) ? $pluginConfig->engine : 'highlight.php';
+
+        // Phiki 使用内联样式，不需要 CSS
+        if ($engine === 'phiki') {
+            return null;
+        }
+
+        // 获取当前主题
+        $theme = isset($pluginConfig->hljsTheme) ? $pluginConfig->hljsTheme : 'github';
+
+        // 返回 CSS 文件 URL
+        $options = Options::alloc();
+        $pluginUrl = $options->pluginUrl . '/PS_Highlight/vendor/Highlight/themes/' . $theme . '.css';
+
+        return $pluginUrl;
+    }
+
+    /**
+     * 输出 CSS 链接标签到 <head>
+     * 此方法通过钩子自动调用，无需手动添加
+     */
+    public static function header()
+    {
+        $cssUrl = self::getStylesheetUrl();
+        if ($cssUrl) {
+            echo '<link rel="stylesheet" href="' . htmlspecialchars($cssUrl) . '">' . "\n";
+        }
     }
 
     /**

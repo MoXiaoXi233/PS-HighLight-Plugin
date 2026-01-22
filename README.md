@@ -9,8 +9,8 @@
   - **Phiki**: 基于 TextMate 语法，精度更高，支持嵌套语法，内联样式
 
 - **丰富的主题**
-  - highlight.php: 12+ 经典主题（GitHub, Monokai, Dracula 等）
-  - Phiki: 60+ 现代主题（Catppuccin, Rose Pine, Tokyo Night 等）
+  - highlight.php: 13+ 经典主题（GitHub, Monokai, Dracula, **Papersu** 等）
+  - Phiki: 60+ 现代主题（Catppuccin, Rose Pine, Tokyo Night, **Papersu** 等）
 
 - **开箱即用**
 
@@ -24,10 +24,15 @@
 
 ### 引擎选择
 
-| 引擎 | 优点 | 缺点 | CSS 需求 |
+| 引擎 | 优点 | 缺点 | CSS 样式 |
 |------|------|------|----------|
-| **highlight.php** | 速度快，兼容性好 | 精度较低 | 需要引入 CSS |
-| **Phiki** | 精度高，支持嵌套 | 相对较慢 | 内联样式 |
+| **highlight.php** | 速度快，兼容性好 | 精度较低 | 自动加载 ✅ |
+| **Phiki** | 精度高，支持嵌套 | 相对较慢 | 内联样式 ✅ |
+
+**说明**：
+- highlight.php 引擎会自动在页面 `<head>` 中注入对应主题的 CSS
+- Phiki 引擎使用内联样式，无需外部 CSS 文件
+- 主题切换即时生效，无需任何手动操作
 
 ## 评论高亮
 

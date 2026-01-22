@@ -49,6 +49,8 @@ enum Theme: string
     case Nord = 'nord';
     case OneDarkPro = 'one-dark-pro';
     case OneLight = 'one-light';
+    case PapersuDark = 'papersu-dark';
+    case PapersuLight = 'papersu-light';
     case Plastic = 'plastic';
     case Poimandres = 'poimandres';
     case Red = 'red';
