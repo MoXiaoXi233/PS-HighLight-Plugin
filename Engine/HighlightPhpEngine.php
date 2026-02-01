@@ -46,9 +46,15 @@ class HighlightPhpEngine implements EngineInterface
         $highlighter->setClassPrefix('hljs-');
         $highlighter->setTabReplace('    ');
 
-        if ($language) {
-            $result = $highlighter->highlight($language, $code);
-        } else {
+        try {
+            if ($language) {
+                // 转为小写以提高兼容性（如 C -> c, PHP -> php）
+                $result = $highlighter->highlight(strtolower($language), $code);
+            } else {
+                $result = $highlighter->highlightAuto($code);
+            }
+        } catch (\DomainException $e) {
+            // 语言不支持时回退到自动检测
             $result = $highlighter->highlightAuto($code);
         }
 
