@@ -15,7 +15,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
  *
  * @package PS_Highlight
  * @author MoXiify
- * @version 1.0.0
+ * @version 1.0.1
  * @link https://www.moxiify.cn
  */
 class Plugin implements PluginInterface
@@ -199,18 +199,41 @@ class Plugin implements PluginInterface
         ]));
     }
 
+    /**
+     * 缓存目录：优先插件内 runtime/cache，不可写时退到系统临时目录。
+     * 都不可写则返回空串，调用方自动跳过缓存（功能不受影响，只是变慢）。
+     */
     private static function cacheDir()
     {
-        $dir = __DIR__ . '/runtime/cache';
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
+        static $dir = null;
+        if ($dir !== null) {
+            return $dir;
         }
-        return $dir;
+
+        $candidates = [
+            __DIR__ . '/runtime/cache',
+            rtrim((string)@sys_get_temp_dir(), '/\\') . '/ps-highlight-cache',
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (!is_dir($candidate)) {
+                @mkdir($candidate, 0755, true);
+            }
+            if (is_dir($candidate) && is_writable($candidate)) {
+                return $dir = $candidate;
+            }
+        }
+
+        return $dir = '';
     }
 
     private static function cacheGet($key)
     {
-        $file = self::cacheDir() . '/' . $key . '.html';
+        $dir = self::cacheDir();
+        if ($dir === '') {
+            return null;
+        }
+        $file = $dir . '/' . $key . '.html';
         if (!is_file($file)) {
             return null;
         }
@@ -220,7 +243,11 @@ class Plugin implements PluginInterface
 
     private static function cacheSet($key, $html)
     {
-        @file_put_contents(self::cacheDir() . '/' . $key . '.html', $html, LOCK_EX);
+        $dir = self::cacheDir();
+        if ($dir === '') {
+            return;
+        }
+        @file_put_contents($dir . '/' . $key . '.html', $html, LOCK_EX);
         if (random_int(1, 50) === 1) {
             self::cacheGc();
         }
@@ -228,8 +255,12 @@ class Plugin implements PluginInterface
 
     private static function cacheGc()
     {
+        $dir = self::cacheDir();
+        if ($dir === '') {
+            return;
+        }
         $limit = time() - 30 * 86400;
-        foreach (glob(self::cacheDir() . '/*.html') ?: [] as $file) {
+        foreach (glob($dir . '/*.html') ?: [] as $file) {
             if (@filemtime($file) < $limit) {
                 @unlink($file);
             }
@@ -256,9 +287,17 @@ class Plugin implements PluginInterface
 
         // 返回 CSS 文件 URL
         $options = Options::alloc();
-        $pluginUrl = $options->pluginUrl . '/PS_Highlight/vendor/Highlight/themes/' . $theme . '.css';
+        $pluginUrl = $options->pluginUrl . '/' . self::slug() . '/vendor/Highlight/themes/' . $theme . '.css';
 
         return $pluginUrl;
+    }
+
+    /**
+     * 插件目录名（URL 与类名都以它为准，改目录名不会失效）
+     */
+    private static function slug()
+    {
+        return basename(__DIR__);
     }
 
     /**
@@ -268,7 +307,7 @@ class Plugin implements PluginInterface
     public static function header()
     {
         $options = Options::alloc();
-        $pluginUrl = $options->pluginUrl . '/PS_Highlight';
+        $pluginUrl = $options->pluginUrl . '/' . self::slug();
         $pluginConfig = $options->plugin('PS_Highlight');
 
         // 输出插件样式
