@@ -172,9 +172,68 @@ class Plugin implements PluginInterface
             return $content;
         }
 
-        // 加载引擎
-        $engine = self::getEngine();
-        return self::processContent($content, $engine);
+        // 命中缓存直接返回，跳过 DOM 解析与引擎初始化
+        $cacheKey = md5($content . '|' . self::optionSignature());
+        $cached = self::cacheGet($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $out = self::processContent($content, self::getEngine());
+        self::cacheSet($cacheKey, $out);
+
+        return $out;
+    }
+
+    /**
+     * 影响高亮结果的配置指纹（引擎 / 主题 / 行号），配置变了缓存自动失效。
+     */
+    private static function optionSignature()
+    {
+        $config = Options::alloc()->plugin('PS_Highlight');
+        return md5(json_encode([
+            'engine' => isset($config->engine) ? (string)$config->engine : 'highlight.php',
+            'theme'  => isset($config->phikiTheme) ? (string)$config->phikiTheme : 'github-light',
+            'lines'  => isset($config->showLineNumbers) ? implode(',', (array)$config->showLineNumbers) : '',
+            'v'      => '2',
+        ]));
+    }
+
+    private static function cacheDir()
+    {
+        $dir = __DIR__ . '/runtime/cache';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        return $dir;
+    }
+
+    private static function cacheGet($key)
+    {
+        $file = self::cacheDir() . '/' . $key . '.html';
+        if (!is_file($file)) {
+            return null;
+        }
+        $html = @file_get_contents($file);
+        return ($html === false || $html === '') ? null : $html;
+    }
+
+    private static function cacheSet($key, $html)
+    {
+        @file_put_contents(self::cacheDir() . '/' . $key . '.html', $html, LOCK_EX);
+        if (random_int(1, 50) === 1) {
+            self::cacheGc();
+        }
+    }
+
+    private static function cacheGc()
+    {
+        $limit = time() - 30 * 86400;
+        foreach (glob(self::cacheDir() . '/*.html') ?: [] as $file) {
+            if (@filemtime($file) < $limit) {
+                @unlink($file);
+            }
+        }
     }
 
     /**
